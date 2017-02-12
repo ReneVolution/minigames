@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SoundJumper</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.6.2/phaser.min.js" ></script>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <script type="text/javascript">
+      var game = new Phaser.Game(
+        600,
+        400,
+        Phaser.AUTO,
+        '',
+        {
+          preload: preload,
+          create: create,
+          update: update
+        }
+      );
+
+      var balls;
+      var current_ball;
+      var cursors;
+      var platforms;
+      var spaceKey;
+      var msg;
+
+
+      function preload() {
+        game.load.image('bg', 'assets/bg.jpg');
+        game.load.image('platform1', 'assets/platform1.png');
+        game.load.image('platform2', 'assets/platform2.png');
+        game.load.image('platform3', 'assets/platform3.png');
+        game.load.image('platform4', 'assets/platform4.png');
+
+        game.load.audio('kick', 'assets/sounds/kick-classic.mp3');
+        game.load.audio('snare', 'assets/sounds/snare-block.mp3');
+        game.load.audio('clap', 'assets/sounds/clap-808.mp3');
+        game.load.audio('shaker', 'assets/sounds/shaker-shuffle.mp3');
+
+      }
+
+      function create() {
+
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+        spaceKey.onDown.add(addBall, game);
+
+        var background = game.add.sprite(0, 0, 'bg');
+        background.width = game.world.width;
+        background.height = game.world.height;
+
+        platforms = game.add.group();
+        platforms.enableBody = true;
+
+        var ledge = platforms.create(18, game.world.height - 60, 'platform1');
+        ledge.playSound = function () {game.sound.play('kick');};
+        ledge.body.immovable = true;
+
+        ledge = platforms.create(18 + (4 + 138), game.world.height - 60, 'platform2');
+        ledge.playSound = function () {game.sound.play('snare');};
+        ledge.body.immovable = true;
+
+        ledge = platforms.create(18 + (4 + 138) * 2, game.world.height - 60, 'platform3');
+        ledge.playSound = function () {game.sound.play('clap');};
+        ledge.body.immovable = true;
+
+        ledge = platforms.create(18 + (4 + 138) * 3, game.world.height - 60, 'platform4');
+        ledge.playSound = function () {game.sound.play('shaker');};
+        ledge.body.immovable = true;
+
+        balls = game.add.group();
+        addBall();
+
+        cursors = game.input.keyboard.createCursorKeys();
+        game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
+
+        msg = game.add.text(
+            8,
+            8,
+            'Navigate left/right | Grow/Shrink up/down | Add Ball \<SPACE\>',
+            {fontSize: '16px', fill: '#FFFFFF'}
+        );
+      }
+
+      function update() {
+        game.physics.enable(platforms);
+        game.physics.arcade.collide(balls, platforms, playSound, null, game);
+        game.physics.arcade.collide(balls, balls);
+
+
+        if (cursors.left.isDown) {
+            current_ball.body.velocity.x = -300;
+
+        }
+        else if (cursors.right.isDown) {
+            current_ball.body.velocity.x = 300;
+
+        }
+        else if (cursors.up.isDown) {
+            current_ball.scale.setTo(current_ball.scale.x + 0.2, current_ball.scale.y + 0.2);
+        }
+        else if (cursors.down.isDown) {
+            current_ball.scale.setTo(current_ball.scale.x - 0.2, current_ball.scale.y - 0.2);
+        }
+        else {
+            //  Stand still
+        }
+      }
+
+      function playSound(ball, platform) {
+        console.log('Colliding...');
+        platform.playSound();
+      }
+
+      function addBall() {
+        current_ball = game.add.graphics(game.world.width / 2, 100);
+        current_ball.anchor.set(0.5, 0.5);
+
+        current_ball.beginFill(0xf9411d, 1);
+        current_ball.drawCircle(0, 0, 25);
+        game.physics.arcade.enable(current_ball);
+        current_ball.body.bounce.y = 1;
+        current_ball.body.bounce.x = 1;
+        current_ball.body.gravity.y = 300;
+        current_ball.body.collideWorldBounds = true;
+
+        balls.add(current_ball);
+      }
+
+    </script>
+  </body>
+</html>
